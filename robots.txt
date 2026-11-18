@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://thamerala305-eng.github.io/bytespeak/sitemap.xml
