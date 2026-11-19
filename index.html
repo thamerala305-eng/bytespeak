@@ -302,9 +302,9 @@ body.dark nav{background:var(--bg)} body.dark .dtabs{background:var(--bg)}
 .gcard.on{border-color:var(--pri);box-shadow:0 0 0 2px var(--pri) inset}
 .gcard small{display:block;font-size:12px;opacity:.75}
 .vqopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
-.vqo{padding:14px 8px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:inherit;font-size:16px;cursor:pointer}
-.vqo.right{background:#d8f3dc;border-color:#2d6a4f;color:#1b4332}
-.vqo.wrong{background:#ffe0e0;border-color:#c0392b;color:#7b1f1f}
+.vqo,.lto{padding:14px 8px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:inherit;font-size:16px;cursor:pointer}
+.vqo.right,.lto.right{background:#d8f3dc;border-color:#2d6a4f;color:#1b4332}
+.vqo.wrong,.lto.wrong{background:#ffe0e0;border-color:#c0392b;color:#7b1f1f}
 .okb{border-right:4px solid #2d6a4f;padding-right:10px}.nob{border-right:4px solid #c0392b;padding-right:10px}
 details.itw summary{cursor:pointer;color:var(--pri);margin-top:8px}
 #unsaved{position:fixed;bottom:0;left:0;right:0;z-index:50;background:#fff3cd;color:#664d03;padding:8px 12px;text-align:center;font-size:14px;box-shadow:0 -2px 8px rgba(0,0,0,.1)}
@@ -644,6 +644,10 @@ function norm(s){ return s.toLowerCase().replace(/[’']/g, "'").replace(/[^a-z0
 /* ---------- views ---------- */
 function viewHome(){
   if (!st._guided) return viewGuide(0);
+  if (!preDone()) {
+    var p = preState(), nxt = p.L ? "#readers" : p.lt ? "#lettertest" : "#letters";
+    return '<section class="hero starthero"><div><p class="kick">ابدأ من هنا</p><h2>🔤 ' + (p.L ? "القراءات البسيطة" : "تعلّم الحروف ونطقها") + '</h2><p>' + (p.L ? "نجحت في اختبار الحروف! الحين اقرا ٨ نصوص قصيرة (" + AR(preReadCount()) + " من ٨)، وبعدها تنفتح الخطة الأسبوعية." : "أول خطوة: تعرف صوت كل حرف داخل الكلمة، وبعدها اختبار سريع لكل الحروف. إذا نجحت تنتقل للقراءات، وبعدها الخطة الأسبوعية.") + '</p><a class="btn big" href="' + nxt + '">' + (p.L ? "كمّل القراءات ←" : p.lt ? "أعد اختبار الحروف ←" : "ابدأ الحروف ←") + "</a></div></section>" + preBanner() + preCard() + viewHomeRest(currentWeek());
+  }
   return sessionCard() + viewHomeRest(currentWeek());
 }
 function viewHomeOld(){
@@ -666,7 +670,7 @@ function viewHomeRest(cw){
     '<a class="qcard" href="#videos"><span class="qi">🎬</span><b>مقاطع يوتيوب</b><small>' + AR(D.vids.reduce(function(n, l){ return n + l.length; }, 0)) + ' مقطعًا مختارًا</small></a>' +
     '<a class="qcard" href="#week-0"><span class="qi">🔤</span><b>الأساسيات</b><small>' + (st._w0 ? "أنهيتها ✓" : "أرقام، أيام، أهم الكلمات") + '</small></a></div>';
   html += '<div class="intro"><h3>كيف يعمل الموقع؟</h3><ul><li>كل أسبوع = موضوع من عالم الـ IT، وكل يوم = نشاط ٢٠–٣٠ دقيقة.</li><li>القصص تُقرأ لك بصوت، واضغط على أي كلمة لتعرف معناها.</li><li>المعلّم يعمل بدون إنترنت: جمل جاهزة لكل موقف، محادثات بالصوت، ومصحح للأخطاء الشائعة.</li><li>بعد كل نشاط اضغط «أنهيت اليوم ✓» ليُحفظ تقدّمك، وراجع بطاقاتك كل يوم لتحافظ على سلسلة أيامك 🔥.</li></ul></div>';
-  html += preCard();
+  if (preDone()) html += preCard();
   [1, 2, 3].forEach(function(p){
     html += '<h3 class="phase">' + D.phases[p] + '</h3><div class="wgrid">';
     D.weeks.forEach(function(w, i){
@@ -1269,6 +1273,7 @@ function wtScore(q, text){
 function wtRes(n){ st._wt = st._wt || {}; return st._wt[n] || null; }
 function wtPassed(n){ var r = wtRes(n); return !!(r && r.p); }
 function weekLocked(n){
+  if (!preDone()) return true;
   // a week opens once the previous week's test is passed (only weeks that have a test lock the next one)
   if (n < 2 || !WT[n - 1]) return false;
   if (st._test && st._test.start >= n) return false;
@@ -1370,6 +1375,7 @@ function weekTestCard(n){
     (r ? '<p>أفضل نتيجة: <b>' + AR(String(r.b).replace(".", "٫")) + "/١٠</b> " + (r.p ? "✅ ناجح" : "· ما نجحت بعد") + "</p>" : "") + '</div><a class="btn' + (r && r.p ? " ghost" : "") + '" href="#wtest-' + n + '">' + (st._wtp && st._wtp.n === n ? "كمّل الاختبار ←" : r ? (r.p ? "أعد الاختبار" : "↺ أعد الاختبار") : "ابدأ الاختبار ←") + "</a></div></section>";
 }
 function viewLockedWeek(n){
+  if (!preDone()) return '<div class="whead"><a href="#plan" class="back">→ الخطة</a><h2>🔒 الأسبوع ' + AR(n) + '</h2></div>' + preBanner() + '<section class="card center"><p class="big">الخطة الأسبوعية تنفتح بعد ما تخلص <b>مرحلة البداية</b>: الحروف واختبارها، وبعدها القراءات البسيطة.</p><a class="btn big" href="' + (preState().L ? "#readers" : "#letters") + '">كمّل البداية ←</a></section>';
   return '<div class="whead"><a href="#plan" class="back">→ كل الأسابيع</a><span class="wn">الأسبوع ' + AR(n) + '</span><h2>🔒 ' + esc(D.weeks[n - 1].title) + '</h2></div><section class="card center"><p class="big">هذا الأسبوع ينفتح بعد ما تنجح في اختبار الأسبوع ' + AR(n - 1) + " (٧ من ١٠).</p>" + (wtRes(n - 1) ? '<p class="hint">أفضل نتيجة لك: ' + AR(String(wtRes(n - 1).b).replace(".", "٫")) + "/١٠</p>" : "") + '<a class="btn big" href="#wtest-' + (n - 1) + '">🎯 ادخل اختبار الأسبوع ' + AR(n - 1) + '</a> <a class="btn ghost" href="#week-' + (n - 1) + '">راجع الأسبوع ' + AR(n - 1) + "</a></section>";
 }
 
@@ -1607,7 +1613,7 @@ function phSay(btnText){ say(btnText); }
 /* ---------- starter stage: letters -> simple readers -> weekly plan ---------- */
 function preState(){ st._pre = st._pre || { L: 0, r: {} }; st._pre.r = st._pre.r || {}; return st._pre; }
 function preReadCount(){ var r = (st._pre && st._pre.r) || {}; return D.rdr.filter(function(x){ return r[x[0]]; }).length; }
-function preDone(){ var p = st._pre; if (p && p.skip) return true; if (st._test && st._test.start > 1) return true; if (!p && (total() > 0 || st._w0)) return true; return !!(p && p.L && preReadCount() >= D.rdr.length); }
+function preDone(){ var p = st._pre; if (p && p.skip) return true; return !!(p && p.L && preReadCount() >= D.rdr.length); }
 function preLabel(){ var p = preState(); return p.L ? "القراءات · " + AR(preReadCount()) + " من " + AR(D.rdr.length) : "الحروف ونطقها"; }
 function preBanner(){
   if (preDone()) return "";
@@ -1625,7 +1631,7 @@ function preCard(){
 function viewReaders(){
   var p = preState(), n = preReadCount();
   var H = '<div class="whead"><a href="#plan" class="back">→ الخطة</a><h2>📖 قراءات بسيطة</h2><p class="goal">بعد ما تعلمت أصوات الحروف، اقرا هالنصوص القصيرة. كل نص يركّز على أصوات معيّنة. اقرا الجملة بنفسك أول، وبعدين اضغط 🔊 وتأكد. واضغط أي كلمة تعرف معناها.</p></div>' + preBanner();
-  if (!p.L) H += '<section class="card center"><p>الأفضل تخلص <a href="#letters">الحروف ونطقها</a> أول، وبعدها تجي هنا.</p></section>';
+  if (!p.L) return H + '<section class="card center"><p class="big">🔒 القراءات تنفتح بعد ما تنجح في <b>اختبار الحروف</b>.</p><a class="btn big" href="#letters">روح للحروف</a></section>';
   [[0, 4, "اليوم الأول"], [4, 8, "اليوم الثاني"]].forEach(function(g){
     H += '<h3 class="phase">' + g[2] + "</h3>";
     D.rdr.slice(g[0], g[1]).forEach(function(r, k){
@@ -1640,9 +1646,40 @@ function viewReaders(){
   if (n >= D.rdr.length) H += '<section class="card center"><h4>🎉 خلصت مرحلة البداية!</h4><p>الحين تبدأ الخطة الأسبوعية: كل يوم درس قصير ومراجعة.</p><a class="btn big" href="#plan">ابدأ الخطة الأسبوعية ←</a></section>';
   return H;
 }
+/* ---------- letters test: hear a letter's sound, pick the letter ---------- */
+var LTQ = null;
+var LT_SAME = { C: "KQS", K: "CQ", Q: "CK", S: "CZ", Z: "S", G: "J", J: "G", I: "EY", E: "I", Y: "IE", U: "OW", O: "U", W: "U", X: "KS" };
+function ltNew(){ var L = shuffle(D.phon.l.map(function(x){ return x[0]; })); LTQ = { list: L, i: 0, ok: 0, miss: [] }; }
+function ltQ(){
+  var k = LTQ.list[LTQ.i], L = D.phon.l.filter(function(x){ return x[0] === k; })[0], sn = L[2][0], w = sn[2][0];
+  var bad = (LT_SAME[k] || "") + k, pool = shuffle(D.phon.l.map(function(x){ return x[0]; }).filter(function(x){ return bad.indexOf(x) < 0 && (LT_SAME[x] || "").indexOf(k) < 0; })).slice(0, 3);
+  var opts = shuffle([k].concat(pool));
+  LTQ.cur = { k: k, done: 0 };
+  setTimeout(function(){ say("§snd:" + sn[1]); }, 300);
+  return '<section class="card center"><p class="fcount">السؤال ' + AR(LTQ.i + 1) + " من " + AR(LTQ.list.length) + " · صح " + AR(LTQ.ok) + '</p><div class="pbar"><i style="width:' + (LTQ.i / LTQ.list.length * 100) + '%"></i></div>' +
+    '<h4 class="wtq">🎧 اسمع الصوت: أي حرف يطلع هالصوت؟</h4><div class="row center"><button class="btn big phsay" data-say="§snd:' + esc(sn[1]) + '">🔊 الصوت</button><button class="btn ghost phsay" data-say="' + esc(w) + '">🔊 مثال: كلمة تبدأ فيه</button></div>' +
+    '<div class="vqopts ltopts">' + opts.map(function(o){ return '<button class="lto" data-l="' + o + '" dir="ltr"><b style="font-size:1.6em">' + o + " " + o.toLowerCase() + "</b></button>"; }).join("") + '</div><div id="ltfb"></div></section>';
+}
+function viewLetterTest(){
+  if (!LTQ || LTQ.fin) ltNew();
+  var H = '<div class="whead"><a href="#letters" class="back">→ الحروف</a><h2>✅ اختبار الحروف</h2><p class="goal">٢٦ سؤال: تسمع صوت حرف وتختار الحرف. تحتاج <b>٢٢ صح</b> عشان تنتقل للقراءات. تقدر تعيد الاختبار كم ما تبي.</p></div>' + preBanner();
+  if (LTQ.i >= LTQ.list.length) return H + ltResult();
+  return H + ltQ();
+}
+function ltResult(){
+  LTQ.fin = 1; var pass = LTQ.ok >= 22, p = preState();
+  p.lt = Math.max(p.lt || 0, LTQ.ok);
+  if (pass && !p.L) { p.L = 1; st._preDay = today(); }
+  save();
+  var miss = LTQ.miss.map(function(k){ return '<span class="chip" dir="ltr">' + k + " " + k.toLowerCase() + "</span>"; }).join(" ");
+  return '<section class="card center"><h3>' + (pass ? "🎉 نجحت!" : "💪 قربت!") + '</h3><p class="big">' + AR(LTQ.ok) + " من " + AR(LTQ.list.length) + "</p>" +
+    (miss ? '<p>الحروف اللي تحتاج تراجعها:</p><div class="chips">' + miss + "</div>" : "<p>ولا غلطة!</p>") +
+    (pass ? '<p>الحين تقدر تقرا. الخطوة الجاية: القراءات البسيطة.</p><a class="btn big" href="#readers">ابدأ القراءات ←</a>' :
+      '<p>تحتاج ٢٢ صح. راجع الحروف اللي غلطت فيها وجرّب مرة ثانية.</p><div class="row center"><a class="btn" href="#letters">راجع الحروف</a><button class="btn big" id="ltagain">أعد الاختبار</button></div>') + "</section>";
+}
 function viewLetters(){
   var H = '<div class="whead"><h2>🔤 الحروف ونطقها</h2><p class="goal">اسم الحرف شي، وصوته داخل الكلمة شي ثاني. مثلًا اسم <b dir="ltr">F</b> «إف»، لكن صوته في الكلمة «ف»: <b dir="ltr">file</b>. اضغط 🔊 تسمع الصوت، واضغط أي كلمة تسمعها كاملة. وتحت تلقى الحرفين والثلاثة اللي يجون مع بعض ويطلعون صوت جديد، مثل <b dir="ltr">sh</b> = ش.</p></div>' +
-    preBanner() + '<div class="seg phtabs"><button class="phtab on" data-t="l">١. الحروف الـ٢٦</button><button class="phtab" data-t="g">٢. حرفين أو ثلاثة مع بعض</button><button class="phtab" data-t="q">٣. تحدّي</button></div><div id="phbody">' + phLetters() + "</div>" + '<section class="card center prefin"><h4>✅ خلصت الحروف؟</h4><p class="hint">مرّ على الحروف الـ٢٦، وبعدها «حرفين أو ثلاثة مع بعض»، وجرّب «التحدّي». إذا صرت تعرف صوت كل حرف، انتقل للقراءات.</p><button class="btn big" id="preL">' + (preState().L ? "روح للقراءات ←" : "✓ خلصت الحروف، ابدأ القراءات ←") + "</button></section>";
+    preBanner() + '<div class="seg phtabs"><button class="phtab on" data-t="l">١. الحروف الـ٢٦</button><button class="phtab" data-t="g">٢. حرفين أو ثلاثة مع بعض</button><button class="phtab" data-t="q">٣. تحدّي</button></div><div id="phbody">' + phLetters() + "</div>" + '<section class="card center prefin"><h4>✅ اختبار الحروف</h4><p class="hint">مرّ على الحروف الـ٢٦ واسمع صوت كل حرف وأمثلته. إذا صرت تعرفها، سوّ الاختبار: تسمع الصوت وتختار الحرف. تحتاج ٢٢ من ٢٦ عشان تنتقل للقراءات.</p>' + (preState().L ? '<p>✓ نجحت في الاختبار (أفضل نتيجة ' + AR(preState().lt || 22) + ' من ٢٦)</p><a class="btn big" href="#readers">روح للقراءات ←</a>' : '<a class="btn big" href="#lettertest">ابدأ اختبار الحروف ←</a>' + (preState().lt ? '<p class="hint">أفضل نتيجة لك: ' + AR(preState().lt) + ' من ٢٦</p>' : "")) + "</section>";
   return H;
 }
 function phWordBtns(ws){ return ws.map(function(w){ return '<button class="chip phw" data-say="' + esc(w) + '" dir="ltr">' + esc(w) + "</button>"; }).join(""); }
@@ -1831,6 +1868,7 @@ function route(){
   else if (/^words-\d$/.test(h)) { main.innerHTML = viewWords(+h.slice(6)); v = "more"; }
   else if (h === "subs") { main.innerHTML = viewSubs(); v = "more"; }
   else if (h === "letters") { main.innerHTML = viewLetters(); v = "letters"; }
+  else if (h === "lettertest") { main.innerHTML = viewLetterTest(); v = "letters"; }
   else if (h === "readers") { main.innerHTML = viewReaders(); v = "letters"; }
   else if (h === "phone") { main.innerHTML = viewPhone(); v = "more"; }
   else if (h === "patterns") { main.innerHTML = viewPatterns(); v = "more"; }
@@ -2047,6 +2085,11 @@ document.addEventListener("click", function(e){
   if ((el = t.closest(".tg"))) { var p = document.getElementById(el.dataset.t); if (p) { p.hidden = !p.hidden; el.textContent = el.textContent.replace(p.hidden ? "إخفاء" : "إظهار", p.hidden ? "إظهار" : "إخفاء"); } return; }
   if ((el = t.closest(".gnav"))) { $("#main").innerHTML = viewGuide(+el.dataset.i); window.scrollTo(0, 0); return; }
   if (t.closest("#gskip")) { e.preventDefault(); st._guided = true; save(); location.hash = "#plan"; route(); return; }
+  if ((el = t.closest(".lto"))) { if (!LTQ || LTQ.cur.done) return; LTQ.cur.done = 1; var okl = el.dataset.l === LTQ.cur.k; if (okl) LTQ.ok++; else LTQ.miss.push(LTQ.cur.k);
+    el.classList.add(okl ? "right" : "wrong"); document.querySelectorAll(".lto").forEach(function(b){ if (b.dataset.l === LTQ.cur.k) b.classList.add("right"); b.disabled = true; });
+    var fb = document.getElementById("ltfb"); if (fb) fb.innerHTML = '<p class="' + (okl ? "ok" : "bad") + '">' + (okl ? "✓ صح" : "✗ الصح: " + LTQ.cur.k) + "</p>";
+    setTimeout(function(){ LTQ.i++; route(); }, okl ? 700 : 1600); return; }
+  if (t.closest("#ltagain")) { ltNew(); route(); return; }
   if (t.closest("#preL")) { preState().L = 1; st._preDay = today(); markActive(); save(); location.hash = "#readers"; return; }
   if (t.closest("#preSkip")) { preState().skip = 1; save(); toast("✓ تخطيت البداية"); route(); return; }
   if ((el = t.closest(".rdok"))) { var pr = preState(); pr.r[el.dataset.r] = 1; st._preDay = today(); markActive(); save(); toast(preDone() ? "🎉 خلصت مرحلة البداية!" : "✓ أحسنت"); var y = window.scrollY; route(); window.scrollTo(0, y); return; }
